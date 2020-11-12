@@ -10,7 +10,9 @@ desired_cap = {
   "deviceName": "127.0.0.1:7555",
   "appPackage": "com.xueqiu.android",
   "appActivity": ".view.WelcomeActivityAlias",
-  "noReset": True
+  "noReset": True,
+  "dontStopAppOnReset": True,   # 启动时不停止app
+  "skipDeviceInitialization": True  # 跳过安装、权限等设置操作
 }
 
 driver = webdriver.Remote("http://127.0.0.1:4723/wd/hub", desired_cap)
@@ -25,3 +27,5 @@ el2 = driver.find_element_by_xpath("/hierarchy/android.widget.FrameLayout/androi
                                    ".widget.FrameLayout/android.widget.LinearLayout/androidx.recyclerview.widget"
                                    ".RecyclerView/android.widget.RelativeLayout[1]")
 el2.click()
+driver.back()  # 返回上一级页面
+driver.quit()
