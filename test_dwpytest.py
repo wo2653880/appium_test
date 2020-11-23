@@ -10,6 +10,9 @@ from appium import webdriver
 from appium.webdriver.common.mobileby import MobileBy
 from appium.webdriver.common.touch_action import TouchAction
 from hamcrest import *
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.wait import WebDriverWait
 
 
 class TestDW:
@@ -34,7 +37,6 @@ class TestDW:
         sleep(3)
         self.driver.quit()
 
-    @pytest.mark.skip
     def test_search(self):
         """
         1.打开雪球app
@@ -127,6 +129,73 @@ class TestDW:
             f"//*[@text='{number}']/../../..//*[@resource-id='com.xueqiu.android:id/current_price']").text)
         assert_that(c_price, close_to(price, price * 0.1))
         self.driver.find_element(MobileBy.ID, "com.xueqiu.android:id/actin_close").click()
+
+
+class TestBrowser:
+
+    def setup(self):
+        desc_caps = {
+            "platformName": "android",
+            "platformVersion": "6.0",
+            "deviceName": "127.0.0.1:7555",
+            "browserName": "Browser",
+            "noReset": True,
+            # "chromedriverExecutable": "C:/Program Files/Appium/chromedriver" # 屏蔽后放到默认路径
+        }
+        self.driver = webdriver.Remote("http://127.0.0.1:4723/wd/hub", desc_caps)
+        self.driver.implicitly_wait(20)
+
+    def teardown(self):
+        self.driver.quit()
+
+    def test_browser(self):
+        self.driver.get("http://m.baidu.com")
+        self.driver.find_element_by_id("index-kw").click()
+        self.driver.find_element_by_id("index-kw").send_keys("appium")
+        locator1 = (By.ID, "index-bn")
+        WebDriverWait(self.driver, 10).until(expected_conditions.visibility_of_element_located(locator1))
+        self.driver.find_element(*locator1).click()
+
+
+class TestWebView:
+
+    def setup(self):
+        desc_caps = {
+            "platformName": "android",
+            "platformVersion": "6.0",
+            "deviceName": "127.0.0.1:7555",
+            "noReset": True,
+            "appPackage": "com.xueqiu.android",
+            "appActivity": ".view.WelcomeActivityAlias",
+            # "skipServerInstallation": True
+        }
+        self.driver = webdriver.Remote("http://127.0.0.1:4723/wd/hub", desc_caps)
+        self.driver.implicitly_wait(20)
+
+    def teardown(self):
+        self.driver.quit()
+
+    def test_webview(self):
+        # 点击交易
+        self.driver.find_element(MobileBy.XPATH, "//*[@text='交易']").click()
+        locator = (MobileBy.XPATH, "//*[@id='Layout_app_3V4']/div/div/ul/li[1]/div[2]/h1")
+        print(self.driver.contexts)
+        # 切换上下文，切换到webview
+        self.driver.switch_to.context(self.driver.contexts[-1])
+        # 点击A股开户
+        # print(self.driver.window_handles)
+        WebDriverWait(self.driver, 120).until(expected_conditions.element_to_be_clickable(locator))
+        self.driver.find_element(*locator).click()
+        # 跳转到window
+        # print(self.driver.window_handles)
+        self.driver.switch_to.window(self.driver.window_handles[-1])
+
+        # 输入用户名和验证码，点击立即开户
+        locator1 = (MobileBy.ID, "phone-number")
+        WebDriverWait(self.driver, 120).until(expected_conditions.element_to_be_clickable(locator1))
+        self.driver.find_element(*locator1).send_keys("13265803556")
+        self.driver.find_element(MobileBy.ID, "code").send_keys("1234")
+        self.driver.find_element(MobileBy.CSS_SELECTOR, "body > div > div > div.form-wrap > div > div.btn-submit").click()
 
 
 if __name__ == '__main__':
